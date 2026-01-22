@@ -94,6 +94,30 @@ También devuelve la lista final de columnas graficadas.
 
 ---
 
+## 5️⃣ `get_features_cat_regression(df, target_col, pvalue=0.05)`
+Selecciona columnas **categóricas** relevantes para un modelo de regresión con target numérico.
+
+🔍 Para cada variable categórica:
+- Aplica el **test estadístico adecuado** según el tipo de variable (binaria / con más categorías).  
+- Evalúa si la relación con el target es **estadísticamente significativa** (según `pvalue`).
+
+Solo devuelve aquellas columnas categóricas cuyo test de relación con el target es significativo.
+
+✔ Devuelve una **lista de columnas categóricas** recomendadas.
+
+---
+
+## 6️⃣ `plot_features_cat_regression(df, target_col, columns=[], pvalue=0.05, with_individual_plot=False)`
+Genera gráficos para analizar la relación entre el **target numérico** y las **variables categóricas**.
+
+- Si `columns` está vacío → utiliza automáticamente todas las variables categóricas del dataframe (o las devueltas por `get_features_cat_regression`).  
+- Dibuja **histogramas/boxplots agrupados** del target para cada categoría.  
+- Si `with_individual_plot = True` → un gráfico por variable.  
+- Si `with_individual_plot = False` → puede agrupar varias variables en menos figuras.  
+
+Devuelve la lista final de columnas categóricas que se han graficado.
+
+
 # 🧪 Tests Incluidos
 
 En el archivo `Test.ipynb` se prueban TODAS las funciones con el siguiente datasets:
