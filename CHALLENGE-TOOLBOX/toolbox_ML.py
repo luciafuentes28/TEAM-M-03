@@ -1,6 +1,7 @@
 
 from scipy import stats
 import pandas as pd
+pd.options.mode.copy_on_write = True
 
 def describe_df(df):
     '''
@@ -61,29 +62,31 @@ def tipifica_variables(df, umbral_categoria, umbral_continua):
     dataframe: dataframe con dos columnas "nombre_variable" y "tipo_sugerido".
     '''
 
-    # 
+    # Creo una lista vacía donde guardar luego los resultados
+    resultados = []
 
-    df_descripcion = describe_df(df).T # aprovechamos la función describe_df que ya calcula la cardinalidad y hacemos la transpuesta, para que los nombres de
+    df_descripcion = describe_df(df).T # aprovecho la función describe_df que ya calcula la cardinalidad y hacemos la transpuesta, para que los nombres de
                                      # las variables sean las filas y no las columnas
+    
+    
+    for col in df.columns:
+        # Guardo los valores únicos y las cardinalidades en porcentajes de cada columna de df
+        card = df_descripcion["UNIQUE_VALUES"][col]
+        card_pct = df_descripcion["CARDIN (%)"][col]
 
-    # Corrección para cuando solo tengo un valor
-    df_descripcion.loc[df_descripcion["UNIQUE_VALUES"] == 1, "CARDIN (%)"] = 0.00
+        if card == 2:
+            tipo = "Binaria"
+        elif card < umbral_categoria:
+            tipo = "Categórica"
+        else:
+            if card_pct >= umbral_continua:
+                tipo = "Numérica Continua"
+            else:
+                tipo = "Numérica Discreta"
 
-    # Creamos una nueva columna "tipo_sugerido", partiendo de que todas son categóricas por ejemplo
-    df_descripcion["tipo_sugerido"] = "Categórica"
+        resultados.append({"nombre_variable": col, "tipo_sugerido": tipo})
 
-    # Clasificamos
-    df_descripcion.loc[df_descripcion["UNIQUE_VALUES"] == 2, "tipo_sugerido"] = "Binaria"
-    df_descripcion.loc[df_descripcion["UNIQUE_VALUES"] >= umbral_categoria, "tipo_sugerido"] = "Numérica discreta"
-    df_descripcion.loc[df_descripcion["CARDIN (%)"] >= umbral_continua, "tipo_sugerido"] = "Numérica continua"
-
-    # Reseteamos el index para que pase a ser la columna "nombre_variable"
-    df_descripcion = df_descripcion.reset_index(names = ["nombre_variable"])
-
-    # Eliminamos columnas dejando solo "nombre_variable" y "tipo_sugerido"
-    df_descripcion = df_descripcion.drop(columns = ["DATA_TYPE", "MISSINGS (%)", "UNIQUE_VALUES", "CARDIN (%)"])
-
-    return df_descripcion
+    return pd.DataFrame(resultados)
 
 from scipy import stats
 import pandas as pd
