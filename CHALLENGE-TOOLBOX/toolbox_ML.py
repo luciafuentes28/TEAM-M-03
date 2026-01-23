@@ -1,6 +1,12 @@
 
-from scipy import stats
+import numpy as np
 import pandas as pd
+import scipy.stats as stats
+import matplotlib.pyplot as plt
+import seaborn as sns   
+from statsmodels.stats.proportion import proportions_ztest
+
+
 pd.options.mode.copy_on_write = True
 
 def describe_df(df):
@@ -88,8 +94,7 @@ def tipifica_variables(df, umbral_categoria, umbral_continua):
 
     return pd.DataFrame(resultados)
 
-from scipy import stats
-import pandas as pd
+
 def get_features_num_regression(df, target_col, umbral_corr, pvalue = None):
     '''
     Descripción:
@@ -184,10 +189,6 @@ def get_features_num_regression(df, target_col, umbral_corr, pvalue = None):
     return columnas_seleccionadas
 
 
-from scipy import stats
-import pandas as pd
-import seaborn as sns
-import matplotlib.pyplot as plt
 
 def plot_features_num_regression(df, target_col, columns, umbral_corr, pvalue):
     '''
@@ -295,14 +296,10 @@ def plot_features_num_regression(df, target_col, columns, umbral_corr, pvalue):
     return seleccionadas
 
 
+################ Siguiente función: get_features_cat_regression #######################
 
 
-import pandas as pd
-import scipy.stats as stats
-from statsmodels.stats.proportion import proportions_ztest
-
-
-def get_features_cat_regression(df, target_col, pvalue = 0.05):
+def get_features_cat_regression(df, target_col, pvalue=0.05):
     '''
     Descripción: esta función selecciona las columnas categóricas del dataframe cuya relación con la variable objetivo cumple ciertos
     criterios estadísticos y elige el tipo de test estadístico adecuado según el número de categorías.
@@ -312,7 +309,6 @@ def get_features_cat_regression(df, target_col, pvalue = 0.05):
     pvalue (float): entre 0 y 1.
 
     Retorna: una lista con los nombres de las columnas categóricas seleccionadas que cumplen los criterios de regresión.
-    
     '''
 
     # primero comprueba si cada argumento que recibe es el indicado: 
@@ -337,75 +333,91 @@ def get_features_cat_regression(df, target_col, pvalue = 0.05):
         return None
     
     # luego, vamos a buscar las variables categóricas:
-    def get_cat_columns(df, target_col):
-        cat_cols = [] # creamos la lista vacía donde guardarlas
+    def get_cat_columns(df, target_col, max_unique_ratio=0.05):
+        cat_cols = []
+        n_rows = len(df)
 
         for col in df.columns:
-            if col != target_col and df[col].dtype == 'object': # recorremos las columnas
-                cat_cols.append(col) # y si cumple lo que necesitamos, la apenda a nuestra lista vacía
-        # aquí simplemente nos las devuelve:
-        if cat_cols: # si hay valores en la lista,
-            return cat_cols # nos las devuelve.
-        else: # si no hay, printa que no:
-            print("No hay variables categóricas para analizar")
-            return None
+            if col == target_col:
+                continue
+
+            nunique = df[col].nunique(dropna=True)
+            dtype = df[col].dtype
+
+            if (
+                pd.api.types.is_object_dtype(dtype) or
+                pd.api.types.is_string_dtype(dtype) or
+                pd.api.types.is_categorical_dtype(dtype) or
+                pd.api.types.is_bool_dtype(dtype)
+            ):
+                cat_cols.append(col)
+
+            elif pd.api.types.is_numeric_dtype(dtype):
+                if nunique / n_rows <= max_unique_ratio:
+                    cat_cols.append(col)
+
+        return cat_cols if cat_cols else None
+
+    # Usamos la función para obtener las categóricas
+    cat_cols = get_cat_columns(df, target_col)
+    if cat_cols is None:
+        print("No hay variables categóricas para analizar")
+        return None
         
-    cat_cols = get_cat_columns(df, target_col) # aquí llama a mi función y la guarda en cat_cols
-    if cat_cols is None: # y comprueba que si no hay ninguna columna categórica
-        print("No hay ninguna columna categórica") # nos avisa
-        return None # y termina la función
-    
     # ahora vamos a iterar sobre cada columna categórica:
     cols_seleccionadas = [] # creamos nuestra lista vacía de las que nos valdrán
 
-    for col in cat_cols: # recorremos las columnas categóricas
-        grupos = [df[target_col][df[col] == cat].dropna() 
-                  for cat in df[col].unique()] # aquí creamos una lista de listas, donde cada sublista es el target_col para cada categoría de la columna categórica
+    for col in cat_cols:
+        data = df[[col, target_col]].dropna()  # eliminamos filas con NaN
+        grupos = [data[target_col][data[col] == cat] for cat in data[col].unique()]
+        grupos = [g for g in grupos if len(g) > 1]  # eliminamos grupos con menos de 1 elemento
+        n_cats = len(grupos)
 
-        if len(grupos) == 2:
-            # t-test para dos categorías
-            stat, p_val = stats.ttest_ind(grupos[0], grupos[1], equal_var=False)
-        elif len(grupos) > 2:
-            # z-test de proporciones para más de dos categorías
-            umbral = df[target_col].mean()
-            counts = [sum(g > umbral) for g in grupos]
-            nobs = [len(g) for g in grupos]
-            Pi = 0.5
-            stat, p_val = proportions_ztest(counts, nobs, Pi)
-        else:
+        if n_cats < 2:
+            # solo hay una categoría, no se puede testear
             continue
 
-    if p_val < pvalue:
-        cols_seleccionadas.append(col)
+        try:
+            if n_cats == 2:
+                # t-test de Welch
+                stat, p_val = stats.ttest_ind(grupos[0], grupos[1], equal_var=False)
+            else:
+                # ANOVA de un factor
+                stat, p_val = stats.f_oneway(*grupos)
+        except Exception as e:
+            print(f"Advertencia: no se pudo evaluar la columna '{col}'. Motivo: {e}")
+            continue
+
+        # añadimos la columna a la lista SI pasa el p-value
+        if p_val < pvalue:
+            cols_seleccionadas.append(col)
 
     return cols_seleccionadas
 
+############### Siguiente función: plot_features_cat_regression #######################
 
-
-import pandas as pd
-import matplotlib.pyplot as plt
-import seaborn as sns
-from scipy import stats
-from statsmodels.stats.proportion import proportions_ztest
-
-
-
-def plot_features_cat_regression(df, target_col = "", columns = [], pvalue = 0.05, with_individual_plot = False):
+def plot_features_cat_regression(df, target_col="", pvalue=0.05, with_individual_plot=True):
     '''
     Descripción: esta función selecciona las columnas categóricas del dataframe cuya relación con la variable objetivo cumple
     ciertos criterios estadísticos, elige el tipo de test estadístico adecuado según el número de categorías, y genera histogramas
-    del target para cada categoría de las columnas seleccionadas.
+    del target para cada categoría de las columnas analizadas, marcando cuáles cumplen el criterio estadístico.
 
     Argumentos:
     df (dataframe)
     target_col (columna): la columna objetivo, que debe ser numérica continua o discreta con alta cardinalidad.
     pvalue (float): entre 0 y 1.
+    with_individual_plot (bool): si True, genera histogramas del target por categoría.
 
     Retorna: una lista con los nombres de las columnas categóricas seleccionadas que cumplen los criterios de regresión.
-    Y también genera gráficos de distribución del target para cada categoría de las columnas seleccionadas.
     '''
-    # igual que nuestra otra función, con sus comprobaciones de entrada:     
-    if not isinstance(df, (pd.DataFrame)):
+
+    import pandas as pd
+    import matplotlib.pyplot as plt
+    import seaborn as sns
+    import scipy.stats as stats
+
+    # comprobaciones de entrada
+    if not isinstance(df, pd.DataFrame):
         print("Error: df debe ser un DataFrame de pandas")
         return None
     
@@ -429,61 +441,109 @@ def plot_features_cat_regression(df, target_col = "", columns = [], pvalue = 0.0
         print("Error: with_individual_plot debe ser True o False")
         return None
 
-    # luego, vamos a buscar las variables categóricas:
-    def get_cat_columns(df, target_col):
+    # función interna para detectar columnas categóricas
+    def get_cat_columns(df, target_col, max_unique_ratio=0.05):
         cat_cols = []
+        n_rows = len(df)
+
         for col in df.columns:
-            if col != target_col and df[col].dtype == 'object':
+            if col == target_col:
+                continue
+
+            nunique = df[col].nunique(dropna=True)
+            dtype = df[col].dtype
+
+            # categóricas claras: object, string, categorical, bool
+            if (
+                pd.api.types.is_object_dtype(dtype) or
+                pd.api.types.is_string_dtype(dtype) or
+                pd.api.types.is_categorical_dtype(dtype) or
+                pd.api.types.is_bool_dtype(dtype)
+            ):
                 cat_cols.append(col)
-        if cat_cols:
-            return cat_cols
-        else:
-            print("No hay variables categóricas para analizar")
-            return None
-        
+
+            # numéricas con baja cardinalidad
+            elif pd.api.types.is_numeric_dtype(dtype):
+                if nunique / n_rows <= max_unique_ratio:
+                    cat_cols.append(col)
+
+        return cat_cols if cat_cols else None
+
+    # obtenemos las columnas categóricas
     cat_cols = get_cat_columns(df, target_col)
     if cat_cols is None:
-        print("No hay ninguna columna categórica")
+        print("No hay variables categóricas para analizar")
         return None
 
-# y aquí va a iterar sobre la col y aplicar los tests:    
+    # lista para almacenar las columnas que pasan el test
     cols_seleccionadas = []
 
+    # iteramos sobre cada columna categórica
     for col in cat_cols:
-        grupos = [df[target_col][df[col] == cat].dropna() for cat in df[col].unique()]
+        data = df[[col, target_col]].dropna()  # eliminamos filas con NaN
+        grupos = [data[target_col][data[col] == cat] for cat in data[col].unique()]
+        grupos = [g for g in grupos if len(g) > 1]  # eliminamos grupos muy pequeños
+        n_cats = len(grupos)
 
-        if len(grupos) == 2:
-            # t-test para dos categorías
-            stat, p_val = stats.ttest_ind(grupos[0], grupos[1], equal_var=False)
-        elif len(grupos) > 2:
-            # z-test de proporciones para más de dos categorías
-            # Aquí definimos "evento" como target > media general
-            umbral = df[target_col].mean()
-            counts = [sum(g > umbral) for g in grupos]
-            nobs = [len(g) for g in grupos]
-            Pi = 0.5  # proporción esperada (puedes ajustarlo si quieres)
-            stat, p_val = proportions_ztest(counts, nobs, Pi)
-        else:
-            # solo una categoría → no se puede testear
+        if n_cats < 2:  # no se puede testear
             continue
 
+        try:
+            if n_cats == 2:
+                # t-test de Welch
+                stat, p_val = stats.ttest_ind(grupos[0], grupos[1], equal_var=False)
+            else:
+                # ANOVA de un factor
+                stat, p_val = stats.f_oneway(*grupos)
+        except Exception as e:
+            print(f"Advertencia: no se pudo evaluar la columna '{col}'. Motivo: {e}")
+            continue
+
+        # añadimos a la lista si pasa el pvalue
         if p_val < pvalue:
             cols_seleccionadas.append(col)
-            # y el histograma individual:
-            if with_individual_plot:
-                plt.figure(figsize=(8, 5))
-                sns.histplot(data=df, x=target_col, hue=col, multiple="stack", palette="Set2")
-                plt.title(f"Histograma de {target_col} por {col}")
-                plt.xlabel(target_col)
-                plt.ylabel("Frecuencia")
-                plt.show()
+
+# creamos los gráficos individuales con scatter y histograma del target
+    if with_individual_plot and cols_seleccionadas:
+        n = len(cols_seleccionadas)
+        n_cols = min(3, n)  # máximo 3 columnas por fila
+        n_rows = (n + n_cols - 1) // n_cols  # filas necesarias
+
+        fig, axes = plt.subplots(n_rows, n_cols, figsize=(5 * n_cols, 4 * n_rows))
+        axes = np.array(axes).flatten()  # aplanamos en 1D para iterar
+
+        for i, col in enumerate(cols_seleccionadas):
+            data = df[[col, target_col]].dropna()
+            nunique = data[col].nunique()
+
+            if nunique <= 10:
+                # pocas categorías → boxplot
+                sns.boxplot(x=col, y=target_col, data=data, ax=axes[i], hue=None, palette="Set2", legend=False)
+                axes[i].set_title(f"{col} vs {target_col}")
+                axes[i].set_xlabel(col)
+                axes[i].set_ylabel(target_col)
+            else:
+                # muchas categorías → barplot de media de top N
+                top_n = 10
+                top_categories = data[col].value_counts().nlargest(top_n).index
+                data_top = data[data[col].isin(top_categories)].copy()
+                data_top[col] = data_top[col].astype(str)  # aseguramos tipo string
+                mean_target = data_top.groupby(col)[target_col].mean().sort_values(ascending=False)
+                sns.barplot(x=mean_target.index, y=mean_target.values, ax=axes[i], hue=None, palette="Set2", legend=False)
+                axes[i].set_title(f"{col} (Top {top_n}) vs {target_col}")
+                axes[i].set_xlabel(col)
+                axes[i].set_ylabel(f"Mean {target_col}")
+                axes[i].tick_params(axis='x', rotation=45)
+
+        # eliminamos ejes vacíos si los hay
+        for j in range(i + 1, len(axes)):
+            fig.delaxes(axes[j])
+
+        plt.tight_layout()
+        plt.show()
 
     if not cols_seleccionadas:
         print("Ninguna columna pasó el test de significancia")
         return []
 
     return cols_seleccionadas
-
-
-
-
