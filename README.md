@@ -30,6 +30,26 @@ El trabajo forma parte del **Team Challenge del Bootcamp de Data Science**.
 
 ---
 
+## 🎯 **Objetivo del Proyecto**
+Crear un conjunto de funciones que permita:
+
+- Identificar y clasificar el tipo de cada variable
+- Seleccionar automáticamente las mejores columnas predictoras (numéricas y categóricas)
+- Visualizar relaciones clave entre variables y target
+- Facilitar un análisis estadístico claro y reproducible
+
+---
+
+## 🧩 **¿Qué contiene este Toolbox?**
+- Funciones para **EDA automatizado**
+- Selección de *features* numéricas por correlación + significación estadística
+- Selección de *features* categóricas por test (según corresponda)
+- Visualizaciones automáticas (pairplots)
+- Tests completos incluidos en `Test.ipynb`  
+- Compatible con cualquier dataset orientado a regresión
+
+---
+  
 # 📁 Estructura del Repositorio
 CHALLENGE-TOOLBOX/  
 │
@@ -129,9 +149,10 @@ En el archivo `Test.ipynb` se prueban TODAS las funciones con el siguiente datas
 
 ---
 ✨ Requisitos   
-pandas  
-numpy  
-seaborn  
+Python  
+Pandas   
+Numpy   
+Seaborn  
 matplotlib  
 scipy  
 
