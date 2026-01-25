@@ -299,6 +299,8 @@ def plot_features_num_regression(df, target_col, columns, umbral_corr, pvalue):
 ################ Siguiente función: get_features_cat_regression #######################
 
 
+# FUNCION GET FEATURE CAT REGRESSION:
+
 def get_features_cat_regression(df, target_col, pvalue=0.05):
     '''
     Descripción: esta función selecciona las columnas categóricas del dataframe cuya relación con la variable objetivo cumple ciertos
