@@ -140,7 +140,7 @@ Devuelve la lista final de columnas categóricas que se han graficado.
 
 # 🧪 Tests Incluidos
 
-En el archivo `Test.ipynb` se prueban TODAS las funciones con el siguiente datasets:
+En el archivo `ejemplo_toolbox.ipynb` se prueban TODAS las funciones con el siguiente datasets:
 
 ### ✔ Dataset 2: *dataset_viajes_jun23.csv*
 - Tipificación variada (categorías, numéricas discretas, continuas)  
