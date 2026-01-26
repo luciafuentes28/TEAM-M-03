@@ -30,6 +30,26 @@ El trabajo forma parte del **Team Challenge del Bootcamp de Data Science**.
 
 ---
 
+## 🎯 **Objetivo del Proyecto**
+Crear un conjunto de funciones que permita:
+
+- Identificar y clasificar el tipo de cada variable
+- Seleccionar automáticamente las mejores columnas predictoras (numéricas y categóricas)
+- Visualizar relaciones clave entre variables y target
+- Facilitar un análisis estadístico claro y reproducible
+
+---
+
+## 🧩 **¿Qué contiene este Toolbox?**
+- Funciones para **EDA automatizado**
+- Selección de *features* numéricas por correlación + significación estadística
+- Selección de *features* categóricas por test (según corresponda)
+- Visualizaciones automáticas (pairplots)
+- Tests completos incluidos en `ejemplo_toolbox.ipynb`  
+- Compatible con cualquier dataset orientado a regresión
+
+---
+  
 # 📁 Estructura del Repositorio
 CHALLENGE-TOOLBOX/  
 │
@@ -39,7 +59,7 @@ CHALLENGE-TOOLBOX/
 │
 ├── toolbox_ML.py # Archivo principal con TODAS las funciones  
 ├── Team_Challenge_ToolBox.ipynb # Notebook con pruebas del Toolbox  
-├── Test.ipynb # Tests de validación de funciones  
+├── ejemplo_toolbox.ipynb # Tests de validación de funciones  
 └── README.md # Este archivo  
 
 
@@ -120,7 +140,7 @@ Devuelve la lista final de columnas categóricas que se han graficado.
 
 # 🧪 Tests Incluidos
 
-En el archivo `Test.ipynb` se prueban TODAS las funciones con el siguiente datasets:
+En el archivo `ejemplo_toolbox.ipynb` se prueban TODAS las funciones con el siguiente datasets:
 
 ### ✔ Dataset 2: *dataset_viajes_jun23.csv*
 - Tipificación variada (categorías, numéricas discretas, continuas)  
@@ -129,9 +149,10 @@ En el archivo `Test.ipynb` se prueban TODAS las funciones con el siguiente datas
 
 ---
 ✨ Requisitos   
-pandas  
-numpy  
-seaborn  
+Python  
+Pandas   
+Numpy   
+Seaborn  
 matplotlib  
 scipy  
 
