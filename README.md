@@ -45,7 +45,7 @@ Crear un conjunto de funciones que permita:
 - Selección de *features* numéricas por correlación + significación estadística
 - Selección de *features* categóricas por test (según corresponda)
 - Visualizaciones automáticas (pairplots)
-- Tests completos incluidos en `ejemplo_toolbos.ipynb`  
+- Tests completos incluidos en `ejemplo_toolbox.ipynb`  
 - Compatible con cualquier dataset orientado a regresión
 
 ---
