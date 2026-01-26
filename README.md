@@ -59,7 +59,7 @@ CHALLENGE-TOOLBOX/
 │
 ├── toolbox_ML.py # Archivo principal con TODAS las funciones  
 ├── Team_Challenge_ToolBox.ipynb # Notebook con pruebas del Toolbox  
-├── Test.ipynb # Tests de validación de funciones  
+├── ejemplo_toolbox.ipynb # Tests de validación de funciones  
 └── README.md # Este archivo  
 
 
