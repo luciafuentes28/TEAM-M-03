@@ -520,7 +520,7 @@ def plot_features_cat_regression(df, target_col="", pvalue=0.05, with_individual
 
             if nunique <= 10:       
                 # para pocas categorías, crea boxplot
-                sns.boxplot(x=col, y=target_col, data=data, ax=axes[i], hue=col, palette="Set2", legend=False)
+                sns.boxplot(x=col, y=target_col, data=data, ax=axes[i], color="#a6cee3")
                 axes[i].set_title(f"{col} vs {target_col}") # i es el índice del subplot
                 axes[i].set_xlabel(col) # etiqueta eje x
                 axes[i].set_ylabel(target_col) # etiqueta eje y
@@ -531,7 +531,7 @@ def plot_features_cat_regression(df, target_col="", pvalue=0.05, with_individual
                 data_top = data[data[col].isin(top_categories)].copy() # filtramos el df para quedarnos solo con las top N categorías
                 data_top[col] = data_top[col].astype(str)  # aseguramos tipo string porque seaborn a veces da problemas con tipos mixtos
                 mean_target = data_top.groupby(col)[target_col].mean().sort_values(ascending=False) # calculamos la media del target por categoría y ordenamos
-                sns.barplot(x=mean_target.index, y=mean_target.values, ax=axes[i], hue=col, palette="Set2", legend=False) # barplot de medias
+                sns.barplot(x=mean_target.index, y=mean_target.values, ax=axes[i],  color="#97f06e") # barplot de medias
                 axes[i].set_title(f"{col} (Top {top_n}) vs {target_col}") # título del subplot
                 axes[i].set_xlabel(col) # etiqueta eje x
                 axes[i].set_ylabel(f"Mean {target_col}") # etiqueta eje y
