@@ -346,17 +346,20 @@ def get_features_cat_regression(df, target_col, pvalue=0.05):
             nunique = df[col].nunique(dropna=True) # aqui vemos el número de valores únicos en la columna actual, sin contar NaN, para saber si es categórica o no
             dtype = df[col].dtype # nos dice el tipo de dato de la columna actual, ya que la categoría puede depender del tipo de dato
 
-            if ( # comprobamos si la columna es categórica según su tipo de dato
-                pd.api.types.is_object_dtype(dtype) or # si el tipo de dato es object (string)
-                pd.api.types.is_string_dtype(dtype) or # si el tipo de dato es string
-                pd.api.types.is_categorical_dtype(dtype) or # si el tipo de dato es categórico
-                pd.api.types.is_bool_dtype(dtype) # si el tipo de dato es booleano
-            ):  
-                cat_cols.append(col) # si es categórica, la añadimos a la lista de categóricas
+            # Primero comprobamos si la columna es candidata a categórica por tipo
+            is_categorical_type = ( # si el tipo de dato es object, string, categorical o bool, es categórica
+                pd.api.types.is_object_dtype(dtype) or # pd.api.types = función para comprobar el tipo de dato de una columna
+                pd.api.types.is_string_dtype(dtype) or # si es string, también es categórica
+                pd.api.types.is_categorical_dtype(dtype) or # si es categorical, también es categórica
+                pd.api.types.is_bool_dtype(dtype) # si es bool, también es categórica
+            )
 
-            elif pd.api.types.is_numeric_dtype(dtype): # si el tipo de dato es numérico, porque puede ser categórica
-                if nunique / n_rows <= max_unique_ratio: # vemos si el ratio de valores únicos respecto al total de filas es menor o igual que el umbral, la consideramos categórica
-                    cat_cols.append(col) # si es categórica, la añadimos a la lista de categóricas  
+            is_numeric_type = pd.api.types.is_numeric_dtype(dtype) # si es numérica, puede ser categórica si tiene baja cardinalidad
+
+            # solo se considera categórica si pasa el filtro de cardinalidad
+            if (is_categorical_type or is_numeric_type): # si es categórica o numérica
+                if nunique / n_rows <= max_unique_ratio: # si el ratio de valores únicos respecto al total de filas es menor o igual que el umbral, es categórica
+                    cat_cols.append(col) # añadimos la columna a la lista de categóricas
 
         return cat_cols if cat_cols else None # si la lista de categóricas no está vacía, la devolvemos; si está vacía, devolvemos None
 
@@ -455,19 +458,20 @@ def plot_features_cat_regression(df, target_col="", pvalue=0.05, with_individual
             nunique = df[col].nunique(dropna=True)
             dtype = df[col].dtype
 
-            # categóricas claras: object, string, categorical, bool
-            if (
-                pd.api.types.is_object_dtype(dtype) or
-                pd.api.types.is_string_dtype(dtype) or
-                pd.api.types.is_categorical_dtype(dtype) or
-                pd.api.types.is_bool_dtype(dtype)
-            ):
-                cat_cols.append(col)
+            # Primero comprobamos si la columna es candidata a categórica por tipo
+            is_categorical_type = ( # si el tipo de dato es object, string, categorical o bool, es categórica
+                pd.api.types.is_object_dtype(dtype) or # pd.api.types = función para comprobar el tipo de dato de una columna
+                pd.api.types.is_string_dtype(dtype) or # si es string, también es categórica
+                pd.api.types.is_categorical_dtype(dtype) or # si es categorical, también es categórica
+                pd.api.types.is_bool_dtype(dtype) # si es bool, también es categórica
+            )
 
-            # numéricas con baja cardinalidad
-            elif pd.api.types.is_numeric_dtype(dtype):
-                if nunique / n_rows <= max_unique_ratio:
-                    cat_cols.append(col)
+            is_numeric_type = pd.api.types.is_numeric_dtype(dtype) # si es numérica, puede ser categórica si tiene baja cardinalidad
+
+            # solo se considera categórica si pasa el filtro de cardinalidad
+            if (is_categorical_type or is_numeric_type): # si es categórica o numérica
+                if nunique / n_rows <= max_unique_ratio: # si el ratio de valores únicos respecto al total de filas es menor o igual que el umbral, es categórica
+                    cat_cols.append(col) # añadimos la columna a la lista de categóricas
 
         return cat_cols if cat_cols else None
 
